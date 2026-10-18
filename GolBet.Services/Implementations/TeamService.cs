@@ -9,11 +9,16 @@ namespace GolBet.Services.Implementations;
 public class TeamService : ITeamService
 {
     private readonly IGenericRepository<Team> _teamRepository;
+    private readonly IMatchRepository _matchRepository;
     private readonly IMapper _mapper;
 
-    public TeamService(IGenericRepository<Team> teamRepository, IMapper mapper)
+    public TeamService(
+        IGenericRepository<Team> teamRepository,
+        IMatchRepository matchRepository,
+        IMapper mapper)
     {
         _teamRepository = teamRepository;
+        _matchRepository = matchRepository;
         _mapper = mapper;
     }
 
@@ -39,5 +44,11 @@ public class TeamService : ITeamService
     }
 
     public async Task DeactivateAsync(int id)
-        => await _teamRepository.DeactivateAsync(id);
+    {
+        if (await _matchRepository.HasScheduledMatchesForTeamAsync(id))
+            throw new InvalidOperationException(
+                "No se puede desactivar un equipo con partidos programados.");
+
+        await _teamRepository.DeactivateAsync(id);
+    }
 }

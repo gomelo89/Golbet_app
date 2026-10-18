@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using GolBet.Entities;
 using GolBet.Entities.Enums;
 using GolBet.Repositories.Interfaces;
 using GolBet.Services.DTOs;
@@ -27,7 +28,9 @@ public class MatchService : IMatchService
     public async Task<MatchDetailDto?> GetDetailAsync(int id)
     {
         var match = await _matchRepository.GetByIdWithDetailsAsync(id);
+
         return match is null ? null : _mapper.Map<MatchDetailDto>(match);
+        // if ternario
     }
 
     public async Task<MatchFormDto?> GetForEditAsync(int id)
@@ -75,5 +78,4 @@ public class MatchService : IMatchService
             throw new InvalidOperationException(
                 "La fecha del partido debe ser futura.");
     }
-
 }

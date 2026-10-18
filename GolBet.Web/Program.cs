@@ -33,6 +33,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Business services 
 builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<ITeamService, TeamService>();
 
 // ── 2. CONSTRUIR LA APLICACIÓN ──
 var app = builder.Build();

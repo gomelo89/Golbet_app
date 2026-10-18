@@ -32,4 +32,10 @@ public class MatchRepository : GenericRepository<Match>, IMatchRepository
             .Include(m => m.Bets)
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.Id == id);
+
+    public Task<bool> HasScheduledMatchesForTeamAsync(int teamId)
+        => _dbSet.AnyAsync(m =>
+            m.IsActive &&
+            m.Status == MatchStatus.Scheduled &&
+            (m.HomeTeamId == teamId || m.AwayTeamId == teamId));
 }

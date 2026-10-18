@@ -9,12 +9,16 @@ namespace GolBet.Web.Controllers;
 public class MatchesController : Controller
 {
     private readonly IMatchService _matchService;
+    private readonly ITeamService _teamService;
 
-    public MatchesController(IMatchService matchService)
-        => _matchService = matchService;
+    public MatchesController(IMatchService matchService, ITeamService teamService)
+    {
+        _matchService = matchService;
+        _teamService = teamService;
+    }
 
-    // GET /Matches            -> all matches 
-    // GET /Matches?status=Scheduled -> filtered board 
+    // GET /Matches            -> all matches
+    // GET /Matches?status=Scheduled -> filtered board
     public async Task<IActionResult> Index(MatchStatus? status)
     {
         ViewBag.CurrentStatus = status;
@@ -22,18 +26,14 @@ public class MatchesController : Controller
         return View(board);
     }
 
-    // GET /Matches/Detail/3 
+    // GET /Matches/Detail/3
     public async Task<IActionResult> Detail(int id)
     {
-       var match = await _matchService.GetDetailAsync(id);
-        if (match is null) return NotFound();   // HTTP 404 
+        var match = await _matchService.GetDetailAsync(id);
+        if (match is null) return NotFound();   // HTTP 404
 
         return View(match);
     }
-
-    // Module 5: ADDED
-
-    private readonly ITeamService _teamService;
 
     // GET /Matches/Create
     public async Task<IActionResult> Create()
@@ -70,8 +70,7 @@ public class MatchesController : Controller
     {
         var dto = await _matchService.GetForEditAsync(id);
         if (dto is null) return NotFound();
-
-        await LoadTeamsAsync(); // the form needs the dropdowns too
+        await LoadTeamsAsync();
         return View(dto);
     }
 
@@ -113,7 +112,4 @@ public class MatchesController : Controller
         var teams = await _teamService.GetAllAsync();
         ViewBag.Teams = new SelectList(teams, "Id", "Name");
     }
-
-
-
 }

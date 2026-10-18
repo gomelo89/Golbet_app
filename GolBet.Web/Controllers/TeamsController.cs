@@ -52,8 +52,16 @@ public class TeamsController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(int id)
     {
-        await _teamService.DeactivateAsync(id);
-        TempData["Success"] = "Equipo desactivado.";
+        try
+        {
+            await _teamService.DeactivateAsync(id);
+            TempData["Success"] = "Equipo desactivado.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
         return RedirectToAction(nameof(Index));
     }
 }
