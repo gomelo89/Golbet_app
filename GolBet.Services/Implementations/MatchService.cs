@@ -19,9 +19,13 @@ public class MatchService : IMatchService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<MatchDto>> GetBoardAsync(MatchStatus? status = null)
+    public async Task<IEnumerable<MatchDto>> GetBoardAsync(
+        MatchStatus? status = null,
+        string? search = null,
+        MatchSideFilter side = MatchSideFilter.Any,
+        MatchOddsSort oddsSort = MatchOddsSort.Date)
     {
-        var matches = await _matchRepository.GetAllWithTeamsAsync(status);
+        var matches = await _matchRepository.GetAllWithTeamsAsync(status, search, side, oddsSort);
         return _mapper.Map<IEnumerable<MatchDto>>(matches);
     }
 

@@ -20,3 +20,37 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.match-search-panel {
+  border-radius: 1rem;
+}
+
+.match-search-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.match-filter-toggle {
+  white-space: nowrap;
+}
+
+.match-filter-panel {
+  background-color: #f5f9f6;
+  border: 1px solid #dce9df;
+}
+
+.match-empty-state {
+  background: linear-gradient(145deg, #f5f9f6, #ffffff);
+  border: 1px solid #e1ebe4;
+}
+
+@media (max-width: 575.98px) {
+  .match-search-row {
+    flex-wrap: wrap;
+  }
+
+  .match-filter-toggle {
+    width: 100%;
+  }
+}

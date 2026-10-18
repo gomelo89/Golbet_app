@@ -10,7 +10,11 @@ public class MatchRepository : GenericRepository<Match>, IMatchRepository
 {
     public MatchRepository(AppDbContext context) : base(context) { }
     
-    public async Task<IEnumerable<Match>> GetAllWithTeamsAsync(MatchStatus? status = null)
+    public async Task<IEnumerable<Match>> GetAllWithTeamsAsync(
+        MatchStatus? status = null,
+        string? search = null,
+        MatchSideFilter side = MatchSideFilter.Any,
+        MatchOddsSort oddsSort = MatchOddsSort.Date)
     {
         var query = _dbSet
             .Include(m => m.HomeTeam)
@@ -22,7 +26,37 @@ public class MatchRepository : GenericRepository<Match>, IMatchRepository
         if (status.HasValue)
             query = query.Where(m => m.Status == status.Value);
 
-        return await query.OrderBy(m => m.Date).ToListAsync();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var normalizedSearch = search.Trim().ToLower();
+
+            query = side switch
+            {
+                MatchSideFilter.Home => query.Where(m =>
+                    m.HomeTeam.Name.ToLower().Contains(normalizedSearch)),
+                MatchSideFilter.Away => query.Where(m =>
+                    m.AwayTeam.Name.ToLower().Contains(normalizedSearch)),
+                _ => query.Where(m =>
+                    m.HomeTeam.Name.ToLower().Contains(normalizedSearch) ||
+                    m.AwayTeam.Name.ToLower().Contains(normalizedSearch))
+            };
+        }
+
+        query = oddsSort switch
+        {
+            MatchOddsSort.HomeOddsDescending => query
+                .OrderByDescending(m => m.HomeOdds)
+                .ThenBy(m => m.Date),
+            MatchOddsSort.DrawOddsDescending => query
+                .OrderByDescending(m => m.DrawOdds)
+                .ThenBy(m => m.Date),
+            MatchOddsSort.AwayOddsDescending => query
+                .OrderByDescending(m => m.AwayOdds)
+                .ThenBy(m => m.Date),
+            _ => query.OrderBy(m => m.Date)
+        };
+
+        return await query.ToListAsync();
     }
 
     public async Task<Match?> GetByIdWithDetailsAsync(int id)
