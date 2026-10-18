@@ -1,10 +1,11 @@
 ﻿using GolBet.Entities;
 using GolBet.Entities.Common;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace GolBet.Repositories.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<AppUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -39,6 +40,20 @@ public class AppDbContext : DbContext
             .HasOne(b => b.Match)
             .WithMany(m => m.Bets)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Bet>()
+            .HasOne(b => b.User)
+            .WithMany(u => u.Bets)
+            .HasForeignKey(b => b.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Bet>()
+            .HasIndex(b => new { b.MatchId, b.UserId, b.Pick })
+            .IsUnique();
+
+        modelBuilder.Entity<AppUser>()
+            .Property(u => u.Balance)
+            .HasPrecision(12, 2);
     }
 
     // ---- Automatic audit timestamps ---- 

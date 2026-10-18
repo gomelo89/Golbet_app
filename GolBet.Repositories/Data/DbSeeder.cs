@@ -1,16 +1,29 @@
 ﻿using GolBet.Entities;
 using GolBet.Entities.Enums;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace GolBet.Repositories.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AppDbContext context)
+    public const string AdminRole = "Admin";
+    public const string BettorRole = "Apostador";
+
+    public static async Task SeedAsync(
+        AppDbContext context,
+        RoleManager<IdentityRole> roleManager,
+        UserManager<AppUser> userManager)
     {
         // Applies any pending migration (creates the DB if it does not exist) 
         await context.Database.MigrateAsync();
 
+        await SeedDomainAsync(context);
+        await SeedIdentityAsync(roleManager, userManager);
+    }
+
+    private static async Task SeedDomainAsync(AppDbContext context)
+    {
         if (await context.Teams.AnyAsync()) return;   // idempotence guard 
 
         // ---- Teams ---- 
@@ -88,5 +101,49 @@ public static class DbSeeder
 
         context.Matches.AddRange(matches);
         await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedIdentityAsync(
+        RoleManager<IdentityRole> roleManager,
+        UserManager<AppUser> userManager)
+    {
+        foreach (var roleName in new[] { AdminRole, BettorRole })
+        {
+            if (await roleManager.RoleExistsAsync(roleName)) continue;
+
+            var roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
+            EnsureSucceeded(roleResult, $"No se pudo crear el rol {roleName}");
+        }
+
+        const string adminEmail = "admin@golbet.com";
+        var admin = await userManager.FindByEmailAsync(adminEmail);
+        if (admin is null)
+        {
+            admin = new AppUser
+            {
+                UserName = adminEmail,
+                Email = adminEmail,
+                FullName = "Administrador GolBet",
+                Balance = 0m,
+                EmailConfirmed = true
+            };
+
+            var userResult = await userManager.CreateAsync(admin, "Admin123*");
+            EnsureSucceeded(userResult, "No se pudo crear el administrador inicial");
+        }
+
+        if (!await userManager.IsInRoleAsync(admin, AdminRole))
+        {
+            var assignmentResult = await userManager.AddToRoleAsync(admin, AdminRole);
+            EnsureSucceeded(assignmentResult, "No se pudo asignar el rol Admin");
+        }
+    }
+
+    private static void EnsureSucceeded(IdentityResult result, string message)
+    {
+        if (result.Succeeded) return;
+
+        var errors = string.Join("; ", result.Errors.Select(error => error.Description));
+        throw new InvalidOperationException($"{message}: {errors}");
     }
 }
