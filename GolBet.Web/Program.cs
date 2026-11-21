@@ -45,6 +45,8 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 
 // Repositorios específicos
 builder.Services.AddScoped<IMatchRepository, MatchRepository>();
+// Repositorio de apuestas
+builder.Services.AddScoped<IBetRepository, BetRepository>();
 
 // AutoMapper: scans the assembly containing MappingProfile for all profiles 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
@@ -52,6 +54,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 // Business services 
 builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<IBetService, BetService>();
 
 // ── 2. CONSTRUIR LA APLICACIÓN ──
 var app = builder.Build();
