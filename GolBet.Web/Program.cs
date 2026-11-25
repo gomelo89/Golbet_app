@@ -7,6 +7,7 @@ using GolBet.Repositories.Interfaces;
 using GolBet.Services.Implementations;
 using GolBet.Services.Interfaces;
 using GolBet.Services.Mapping;
+using Serilog;
 
 using System.Globalization;
 
@@ -15,6 +16,9 @@ CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, config) =>
+    config.ReadFrom.Configuration(context.Configuration));
 
 // ── 1. REGISTRO DE SERVICIOS (Siempre ANTES de builder.Build()) ──
 builder.Services.AddControllersWithViews();
@@ -59,6 +63,13 @@ builder.Services.AddScoped<IBetService, BetService>();
 // ── 2. CONSTRUIR LA APLICACIÓN ──
 var app = builder.Build();
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error/General");
+}
+
+app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
 
 // ── 3. EJECUCIÓN EN TIEMPO DE ARRANQUE Y PIPELINE HTTP ──
 // Seed the database on startup
@@ -73,13 +84,13 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseSerilogRequestLogging();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
